@@ -7,6 +7,7 @@ use App\Models\Kategori; // Untuk filter
 use App\Models\Lokasi;  // Untuk filter
 use App\Models\StockMovement; // Import StockMovement
 use App\Models\User;        // Import User untuk filter pencatat
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel; // <-- IMPORT FACADE EXCEL
@@ -14,6 +15,7 @@ use App\Models\Maintenance;
 use App\Models\RecurringPayment;
 use App\Models\MaintenanceSchedule;
 use App\Models\PaymentSchedule;
+use Illuminate\Support\Facades\DB;
 // use App\Exports\BarangStokExport;
 
 class LaporanController extends Controller
@@ -271,6 +273,40 @@ class LaporanController extends Controller
         $grandTotalTerealisasi = $totalMaintenanceTerealisasi + $totalMaintenanceScheduleTerealisasi + $totalPaymentTerealisasi;
         $grandTotalWillCome = $totalMaintenanceWillCome + $totalMaintenanceScheduleWillCome + $totalPaymentWillCome;
 
+        // === MINI STATS ===
+        $maintenanceHariIni = Maintenance::whereDate('tanggal_maintenance', today())->count();
+        $pembayaranJatuhTempo = PaymentSchedule::where('status', 'pending')
+            ->where('due_date', '<=', today())
+            ->count();
+        $selesaiMingguIni = Maintenance::where('status', 'Selesai')
+            ->whereBetween('tanggal_maintenance', [now()->startOfWeek(), now()->endOfWeek()])
+            ->count();
+        // Asumsi ada model Vendor; jika tidak, ganti dengan data lain atau hapus
+        $vendorAktif = Vendor::where('status', 'aktif')->count(); // Jika Vendor tidak ada, comment baris ini dan adjust view
+
+        // === RECENT ACTIVITIES (untuk timeline) ===
+        $maintenanceActivities = Maintenance::select(
+            'nama_perbaikan as text',
+            'updated_at as time',
+            DB::raw('"maintenance" as type'),
+            DB::raw('CASE WHEN status = "Selesai" THEN "success" 
+                     WHEN status = "Dijadwalkan" THEN "warning" 
+                     ELSE "primary" END as activity_type')
+        )->latest()->take(10)->get();
+
+        $paymentActivities = RecurringPayment::select(
+            'nama_pembayaran as text',
+            'updated_at as time',
+            DB::raw('"payment" as type'),
+            DB::raw('CASE WHEN status = "aktif" THEN "info" 
+                     WHEN status = "nonaktif" THEN "warning" 
+                     ELSE "secondary" END as activity_type')
+        )->latest()->take(10)->get();
+
+        $recentActivities = $maintenanceActivities->concat($paymentActivities)
+            ->sortByDesc('time')
+            ->take(4); // Batasi ke 4 seperti dummy
+
         // === DATA GRAFIK ===
         // Maintenance per status
         $maintenancePerStatus = Maintenance::selectRaw('status, COUNT(*) as jumlah')
@@ -340,7 +376,12 @@ class LaporanController extends Controller
             'filterJenis',
             'maintenancePerStatus',
             'paymentPerKategori',
-            'biayaGabunganPerBulan'
+            'biayaGabunganPerBulan',
+            'maintenanceHariIni',      // Tambah mini stats
+            'pembayaranJatuhTempo',
+            'selesaiMingguIni',
+            'vendorAktif',
+            'recentActivities'         // Tambah recent activities
         ));
     }
 

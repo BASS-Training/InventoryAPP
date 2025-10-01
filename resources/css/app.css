@@ -1,5 +1,5 @@
 /* Import Bootstrap */
-@import 'bootstrap/dist/css/bootstrap.min.css'; /* Atau jika Anda menginstal via npm: '../../node_modules/bootstrap/dist/css/bootstrap.min.css' */
+@import "bootstrap/dist/css/bootstrap.min.css"; /* Atau jika Anda menginstal via npm: '../../node_modules/bootstrap/dist/css/bootstrap.min.css' */
 
 /* Tambahkan CSS kustom Anda di bawah sini JIKA PERLU, yang kompatibel dengan Bootstrap */
 /* Contoh:

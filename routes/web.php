@@ -12,6 +12,7 @@ use App\Http\Controllers\ItemRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\VendorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () { // Menggunakan 'aut
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('roles', RoleController::class);
+        Route::resource('vendors', VendorController::class);
         // Permission CRUD routes juga akan ada di sini nanti
         Route::resource('permissions', PermissionController::class);
         Route::resource('maintenances', MaintenanceController::class);

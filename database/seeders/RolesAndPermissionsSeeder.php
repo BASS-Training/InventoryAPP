@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\User; // Import model User jika Anda ingin membuat user admin di sini
+use App\Models\User; // Import model User jika Import model User untuk assign role
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -63,6 +63,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view-laporan-barang-keluar',
             'view-laporan-maintenance',
             'stok-koreksi',
+
+            // Permissions untuk Vendor (baru ditambahkan)
+            'view-vendor',
+            'create-vendor',
+            'edit-vendor',
+            'delete-vendor',
         ];
 
         foreach ($permissions as $permission) {
@@ -100,6 +106,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view-laporan-maintenance',
             'stok-koreksi',
             'maintenance-manage',
+
+            // Permissions Vendor untuk StafGudang (asumsi bisa manage vendor)
+            'view-vendor',
+            'create-vendor',
+            'edit-vendor',
+            'delete-vendor',
         ]);
         $this->command->info('StafGudang role created and given specific permissions.');
         
@@ -119,6 +131,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // ... permission StafGudang yang sudah ada ...
             'view-dashboard', // TAMBAHKAN INI
+
+            // Permissions Vendor untuk Viewer (hanya view)
+            'view-vendor',
         ]);
         $this->command->info('Viewer role created and given view permissions.');
 
