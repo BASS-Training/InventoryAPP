@@ -42,7 +42,11 @@
                     @if($itemRequest->kuantitas_disetujui !== null)
                     <p><strong>Kuantitas Disetujui:</strong> <span class="fw-bold">{{ number_format($itemRequest->kuantitas_disetujui, 0, ',', '.') }}</span> {{ $itemRequest->barang->unit->singkatan_unit ?? $itemRequest->barang->unit->nama_unit ?? '' }}</p>
                     @endif
-                    <p><strong>Tanggal Dibutuhkan:</strong> {{ $itemRequest->tanggal_dibutuhkan ? \Carbon\Carbon::parse($itemRequest->tanggal_dibutuhkan)->isoFormat('DD MMMM YYYY') : '-' }}</p>
+                    <p><strong>Jenis Pengajuan:</strong> {{ ucfirst($itemRequest->tipe_pengajuan) }}</p>
+                    <p><strong>Tanggal Pengambilan:</strong> {{ $itemRequest->tanggal_pengambilan?->isoFormat('DD MMMM YYYY') ?? '-' }}</p>
+                    @if ($itemRequest->tipe_pengajuan === 'peminjaman')
+                    <p><strong>Jatuh Tempo Pengembalian:</strong> {{ $itemRequest->jatuh_tempo_pengembalian?->isoFormat('DD MMMM YYYY') ?? '-' }}</p>
+                    @endif
                     <p><strong>Keperluan:</strong> {{ $itemRequest->keperluan ?? '-' }}</p>
                 </div>
             </div>
@@ -100,7 +104,7 @@
     </div>
     @endif
 
-    @if ($itemRequest->status == 'Diproses' && Auth::user()->hasPermissionTo('pengajuan-barang-return'))
+    @if ($itemRequest->status == 'Diproses' && $itemRequest->tipe_pengajuan == 'peminjaman' && Auth::user()->hasPermissionTo('pengajuan-barang-return'))
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Aksi Pengembalian Barang</h5>
@@ -155,7 +159,7 @@
                 <h5 class="mb-0">Proses Pengeluaran Barang</h5>
             </div>
             <div class="card-body">
-                <p>Pengajuan ini telah disetujui. Klik tombol di bawah untuk memproses pengeluaran barang dari stok.</p>
+                <p>Konfirmasi serah-terima barang kepada pemohon. Aksi ini mencatat petugas, waktu serah-terima, dan pengeluaran stok.</p>
                 <p><strong>Pemohon:</strong> {{ $itemRequest->pemohon->name ?? 'N/A' }}</p>
                 <p><strong>Barang:</strong> {{ $itemRequest->barang->nama_barang ?? 'N/A' }}</p>
                 <p><strong>Kuantitas Disetujui:</strong> <span class="fw-bold">{{ number_format($itemRequest->kuantitas_disetujui, 0, ',', '.') }}</span> {{ $itemRequest->barang->unit->singkatan_unit ?? $itemRequest->barang->unit->nama_unit ?? '' }}</p>
@@ -170,7 +174,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <button type="submit" class="btn btn-info"><i class="bi bi-box-arrow-up-right"></i> Proses & Keluarkan Barang</button>
+                    <button type="submit" class="btn btn-info"><i class="bi bi-box-arrow-up-right"></i> Konfirmasi Serah-Terima</button>
                 </form>
             </div>
         </div>
@@ -202,23 +206,6 @@
             <p><strong>Catatan Approval/Penolakan:</strong> {{ $itemRequest->catatan_approval ?? '-' }}</p>
             @endif
 
-            @if ($itemRequest->status == 'Diproses' && $itemRequest->tipe_pengajuan == 'peminjaman' && Auth::user()->hasPermissionTo('pengajuan-barang-return'))
-            <hr>
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Aksi Pengembalian Aset</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.pengajuan.barang.return', $itemRequest->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin mencatat pengembalian untuk aset ini?');">
-                        @csrf
-                        @method('PUT')
-
-                        <p><strong>Diproses oleh:</strong> {{ $itemRequest->pemroses->name ?? 'N/A' }}</p>
-                        <p><strong>Tanggal Diproses:</strong> {{ $itemRequest->processed_at ? $itemRequest->processed_at->isoFormat('DD MMMM YYYY, HH:mm') : '-' }}</p>
-                        <p><strong>Catatan Pemroses:</strong> {{ $itemRequest->catatan_pemroses ?? '-' }}</p>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-in-down"></i> Catat Pengembalian</button>
-                </form>
-            @endif
         </div>
     </div>
     @endif

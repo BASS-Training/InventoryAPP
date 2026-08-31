@@ -30,7 +30,8 @@
                                 <th class="text-center">Barang Diminta</th>
                                 <th class="text-center">Kuantitas</th>
                                 <th class="text-center">Keperluan</th>
-                                <th class="text-center">Tgl. Dibutuhkan</th>
+                                <th class="text-center">Pengambilan</th>
+                                <th class="text-center">Jatuh Tempo</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Catatan Approval</th>
                                 <th class="text-center">Aksi</th>
@@ -49,7 +50,8 @@
                                     </td>
                                     <td class="text-end">{{ number_format($request->kuantitas_diminta, 0, ',', '.') }} {{ $request->barang->unit->singkatan_unit ?? $request->barang->unit->nama_unit ?? '' }}</td>
                                     <td>{{ Str::limit($request->keperluan, 50) }}</td>
-                                    <td>{{ $request->tanggal_dibutuhkan ? \Carbon\Carbon::parse($request->tanggal_dibutuhkan)->isoFormat('DD MMM YYYY') : '-' }}</td>
+                                    <td>{{ $request->tanggal_pengambilan?->isoFormat('DD MMM YYYY') ?? '-' }}</td>
+                                    <td>{{ $request->tipe_pengajuan === 'peminjaman' ? ($request->jatuh_tempo_pengembalian?->isoFormat('DD MMM YYYY') ?? '-') : '-' }}</td>
                                     <td>
                                         @if($request->status == 'Diajukan')
                                             <span class="badge bg-warning text-dark">{{ $request->status }}</span>

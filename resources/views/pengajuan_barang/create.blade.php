@@ -23,6 +23,11 @@
                         
                         <input type="hidden" name="tipe_pengajuan" value="{{ $tipe }}">
 
+                        <div class="alert alert-light border">
+                            <strong>Pemohon:</strong> {{ Auth::user()->name }}<br>
+                            <small class="text-muted">{{ Auth::user()->email }} · Tanggal pengajuan: {{ now()->isoFormat('DD MMMM YYYY') }}</small>
+                        </div>
+
                         <div class="mb-3">
                             <label for="barang_id" class="form-label">Barang yang Diajukan <span class="text-danger">*</span></label>
                             <select class="form-select @error('barang_id') is-invalid @enderror" id="barang_id" name="barang_id" required>
@@ -47,12 +52,23 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="tanggal_dibutuhkan" class="form-label">Tanggal Dibutuhkan (Opsional)</label>
-                            <input type="date" class="form-control @error('tanggal_dibutuhkan') is-invalid @enderror" id="tanggal_dibutuhkan" name="tanggal_dibutuhkan" value="{{ old('tanggal_dibutuhkan') }}" min="{{ now()->format('Y-m-d') }}">
-                            @error('tanggal_dibutuhkan')
+                            <label for="tanggal_pengambilan" class="form-label">Tanggal Pengambilan <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('tanggal_pengambilan') is-invalid @enderror" id="tanggal_pengambilan" name="tanggal_pengambilan" value="{{ old('tanggal_pengambilan', now()->format('Y-m-d')) }}" min="{{ now()->format('Y-m-d') }}" required>
+                            @error('tanggal_pengambilan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        @if ($tipe === 'peminjaman')
+                        <div class="mb-3">
+                            <label for="jatuh_tempo_pengembalian" class="form-label">Jatuh Tempo Pengembalian <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('jatuh_tempo_pengembalian') is-invalid @enderror" id="jatuh_tempo_pengembalian" name="jatuh_tempo_pengembalian" value="{{ old('jatuh_tempo_pengembalian') }}" min="{{ now()->format('Y-m-d') }}" required>
+                            <small class="text-muted">Wajib untuk aset yang dipinjam.</small>
+                            @error('jatuh_tempo_pengembalian')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
 
                         <div class="mb-3">
                             <label for="keperluan" class="form-label">Keperluan / Alasan Pengajuan <span class="text-danger">*</span></label>

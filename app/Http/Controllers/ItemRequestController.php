@@ -57,11 +57,17 @@ class ItemRequestController extends Controller
             'barang_id' => 'required|exists:barangs,id',
             'tipe_pengajuan' => 'required|in:permintaan,peminjaman',
             'kuantitas_diminta' => 'required|integer|min:1',
-            'tanggal_dibutuhkan' => 'nullable|date|after_or_equal:today',
+            'tanggal_pengambilan' => 'required|date|after_or_equal:today',
+            'jatuh_tempo_pengembalian' => 'nullable|required_if:tipe_pengajuan,peminjaman|date|after_or_equal:tanggal_pengambilan',
             'keperluan' => 'required|string|max:1000',
         ]);
 
         $barang = Barang::findOrFail($validatedData['barang_id']);
+
+        $expectedItemType = $validatedData['tipe_pengajuan'] === 'peminjaman' ? 'aset' : 'habis_pakai';
+        if ($barang->tipe_item !== $expectedItemType || $barang->status !== 'aktif') {
+            return back()->withErrors(['barang_id' => 'Barang yang dipilih tidak tersedia untuk jenis pengajuan ini.'])->withInput();
+        }
 
         // Opsional: Validasi tambahan jika kuantitas diminta melebihi stok (tergantung aturan bisnis)
         // Jika pengajuan bisa melebihi stok dan menunggu restock, maka validasi ini tidak perlu.
@@ -76,7 +82,8 @@ class ItemRequestController extends Controller
             'tipe_pengajuan' => $validatedData['tipe_pengajuan'],
             'kuantitas_diminta' => $validatedData['kuantitas_diminta'],
             'keperluan' => $validatedData['keperluan'],
-            'tanggal_dibutuhkan' => $validatedData['tanggal_dibutuhkan'],
+            'tanggal_pengambilan' => $validatedData['tanggal_pengambilan'],
+            'jatuh_tempo_pengembalian' => $validatedData['jatuh_tempo_pengembalian'] ?? null,
             'status' => 'Diajukan', // Status awal
         ]);
 
@@ -366,10 +373,10 @@ class ItemRequestController extends Controller
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk mencatat pengembalian barang.');
         }
 
-        // Hanya pengajuan dengan status 'Diproses' yang bisa dikembalikan
-        if ($itemRequest->status !== 'Diproses') {
+        // Hanya aset pinjaman yang telah diserahterimakan yang bisa dikembalikan.
+        if ($itemRequest->tipe_pengajuan !== 'peminjaman' || $itemRequest->status !== 'Diproses') {
             return redirect()->route('admin.pengajuan.barang.show', $itemRequest->id)
-                            ->with('error', 'Pengajuan ini tidak dalam status "Diproses" dan tidak dapat dikembalikan.');
+                            ->with('error', 'Hanya peminjaman yang telah diserahterimakan dapat dicatat pengembaliannya.');
         }
 
         $validatedData = $request->validate([

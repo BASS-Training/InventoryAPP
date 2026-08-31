@@ -20,6 +20,8 @@ class ItemRequest extends Model
         'kuantitas_disetujui',
         'keperluan',
         'tanggal_dibutuhkan',
+        'tanggal_pengambilan',
+        'jatuh_tempo_pengembalian',
         'status',
         'approved_by',
         'approved_at',
@@ -34,6 +36,8 @@ class ItemRequest extends Model
 
     protected $casts = [
         'tanggal_dibutuhkan' => 'date', // Casting ke objek Carbon Date
+        'tanggal_pengambilan' => 'date',
+        'jatuh_tempo_pengembalian' => 'date',
         'approved_at' => 'datetime',   // Casting ke objek Carbon DateTime
         'processed_at' => 'datetime',  // Casting ke objek Carbon DateTime
         'kuantitas_diminta' => 'integer',
