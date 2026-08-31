@@ -2,6 +2,8 @@
 
 @php
     $judul = ($tipe == 'peminjaman') ? 'Buat Peminjaman Aset' : 'Buat Permintaan Barang';
+    $labelBarang = ($tipe == 'peminjaman') ? 'Barang yang Ingin Dipinjam' : 'Barang yang Ingin Diminta';
+    $labelKuantitas = ($tipe == 'peminjaman') ? 'Kuantitas yang Ingin Dipinjam' : 'Kuantitas yang Ingin Diminta';
 @endphp
 
 @section('title', $judul)
@@ -29,7 +31,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="barang_id" class="form-label">Barang yang Diajukan <span class="text-danger">*</span></label>
+                            <label for="barang_id" class="form-label">{{ $labelBarang }} <span class="text-danger">*</span></label>
                             <select class="form-select @error('barang_id') is-invalid @enderror" id="barang_id" name="barang_id" required>
                                 <option value="">-- Pilih Barang --</option>
                                 @foreach ($barangs as $barang)
@@ -44,7 +46,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="kuantitas_diminta" class="form-label">Kuantitas Diminta <span class="text-danger">*</span></label>
+                            <label for="kuantitas_diminta" class="form-label">{{ $labelKuantitas }} <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('kuantitas_diminta') is-invalid @enderror" id="kuantitas_diminta" name="kuantitas_diminta" value="{{ old('kuantitas_diminta', 1) }}" min="1" required>
                             @error('kuantitas_diminta')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -61,7 +63,7 @@
 
                         @if ($tipe === 'peminjaman')
                         <div class="mb-3">
-                            <label for="jatuh_tempo_pengembalian" class="form-label">Jatuh Tempo Pengembalian <span class="text-danger">*</span></label>
+                            <label for="jatuh_tempo_pengembalian" class="form-label">Tanggal Pengembalian / Jatuh Tempo <span class="text-danger">*</span></label>
                             <input type="date" class="form-control @error('jatuh_tempo_pengembalian') is-invalid @enderror" id="jatuh_tempo_pengembalian" name="jatuh_tempo_pengembalian" value="{{ old('jatuh_tempo_pengembalian') }}" min="{{ now()->format('Y-m-d') }}" required>
                             <small class="text-muted">Wajib untuk aset yang dipinjam.</small>
                             @error('jatuh_tempo_pengembalian')
