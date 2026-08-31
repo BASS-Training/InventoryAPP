@@ -12,18 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stock_movements', function (Blueprint $table) {
-            // Menggunakan DB::statement karena mengubah enum bisa tricky dan beda antar database
-            // Contoh untuk MySQL:
+        if (DB::getDriverName() === 'mysql') {
+            // MySQL needs a raw statement to alter an enum. SQLite stores this
+            // column as text, so there is no equivalent schema change to run.
             DB::statement("ALTER TABLE stock_movements MODIFY COLUMN tipe_pergerakan ENUM('masuk', 'keluar', 'koreksi-tambah', 'koreksi-kurang') NOT NULL COMMENT 'Jenis pergerakan stok'");
-        });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('stock_movements', function (Blueprint $table) {
-            // Kembalikan ke definisi lama jika perlu rollback
+        if (DB::getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE stock_movements MODIFY COLUMN tipe_pergerakan ENUM('masuk', 'keluar') NOT NULL COMMENT 'Jenis pergerakan stok'");
-        });
+        }
     }
 };

@@ -84,9 +84,13 @@ class DashboardController extends Controller
                            ->get();
 
         // 4. Data untuk Grafik Pergerakan Stok 6 Bulan Terakhir (Bar Chart)
+        $monthExpression = DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', tanggal_pergerakan)"
+            : 'DATE_FORMAT(tanggal_pergerakan, "%Y-%m")';
+
         $pergerakanStokData = StockMovement::query()
-                                ->select(
-                                    DB::raw('DATE_FORMAT(tanggal_pergerakan, "%Y-%m") as bulan'),
+            ->select(
+                DB::raw("{$monthExpression} as bulan"),
                                     DB::raw('SUM(CASE WHEN tipe_pergerakan IN ("masuk", "koreksi-tambah", "pengembalian") THEN kuantitas ELSE 0 END) as total_masuk'),
                                     DB::raw('SUM(CASE WHEN tipe_pergerakan IN ("keluar", "koreksi-kurang") THEN kuantitas ELSE 0 END) as total_keluar')
                                 )
