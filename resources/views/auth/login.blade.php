@@ -27,7 +27,13 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">{{ __('Password') }}</label>
-                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                            <div class="input-group">
+                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                                <button id="hold-to-reveal-password" class="btn btn-outline-secondary" type="button" aria-label="Tahan untuk melihat password" title="Tahan untuk melihat password">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Tahan ikon mata untuk melihat password.</small>
                             @error('password')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -70,3 +76,40 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const passwordInput = document.getElementById('password');
+    const revealButton = document.getElementById('hold-to-reveal-password');
+
+    if (!passwordInput || !revealButton) return;
+
+    const icon = revealButton.querySelector('i');
+    const showPassword = () => {
+        passwordInput.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+        revealButton.setAttribute('aria-label', 'Lepaskan untuk menyembunyikan password');
+    };
+    const hidePassword = () => {
+        passwordInput.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+        revealButton.setAttribute('aria-label', 'Tahan untuk melihat password');
+    };
+
+    revealButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        showPassword();
+    });
+    ['pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'].forEach((eventName) => {
+        revealButton.addEventListener(eventName, hidePassword);
+    });
+    document.addEventListener('pointerup', hidePassword);
+
+    revealButton.addEventListener('keydown', (event) => {
+        if (event.key === ' ' || event.key === 'Enter') showPassword();
+    });
+    revealButton.addEventListener('keyup', hidePassword);
+});
+</script>
+@endpush
