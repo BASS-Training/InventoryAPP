@@ -33,7 +33,7 @@
                                     <i class="bi bi-eye" aria-hidden="true"></i>
                                 </button>
                             </div>
-                            <small class="form-text text-muted">Tahan ikon mata untuk melihat password.</small>
+                            <small class="form-text text-muted"></small>
                             @error('password')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -62,13 +62,6 @@
                             @endif
                         </div>
 
-                        @if (Route::has('register'))
-                        <hr class="my-4">
-                        <p class="text-center text-muted small">Belum punya akun?</p>
-                        <div class="d-grid">
-                            <a href="{{ route('register') }}" class="btn btn-outline-secondary">Buat Akun Baru</a>
-                        </div>
-                        @endif
                     </form>
                 </div>
             </div>

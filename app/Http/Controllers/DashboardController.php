@@ -21,6 +21,85 @@ class DashboardController extends Controller
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk melihat dashboard.');
         }
 
+        // Dashboard Viewer sengaja dibatasi sebagai katalog barang. Viewer tidak
+        // memerlukan statistik operasional maupun data pengajuan pengguna lain.
+        if (Auth::user()->hasRole('Viewer')) {
+            $kategoris = Kategori::query()
+                ->with(['barangs' => function ($query) {
+                    $query->where('status', 'aktif')
+                        ->with(['unit', 'lokasi'])
+                        ->orderBy('nama_barang');
+                }])
+                ->orderBy('nama_kategori')
+                ->get()
+                ->map(fn (Kategori $kategori) => [
+                    'id' => $kategori->id,
+                    'name' => $kategori->nama_kategori,
+                    'items' => $kategori->barangs->map(fn (Barang $barang) => [
+                        'id' => $barang->id,
+                        'name' => $barang->nama_barang,
+                        'code' => $barang->kode_barang,
+                        'type' => $barang->tipe_item === 'aset' ? 'Aset' : 'Habis Pakai',
+                        'location' => $barang->lokasi?->nama_lokasi,
+                        'stock' => $barang->stok,
+                        'minimumStock' => $barang->stok_minimum,
+                        'unit' => $barang->unit?->singkatan_unit ?? $barang->unit?->nama_unit,
+                    ])->values(),
+                ])->values();
+
+            $lowStockCount = Barang::query()
+                ->where('status', 'aktif')
+                ->where('stok_minimum', '>', 0)
+                ->whereColumn('stok', '<=', 'stok_minimum')
+                ->count();
+
+            $requestCounts = ItemRequest::query()
+                ->where('user_id', Auth::id())
+                ->select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $requestSummary = collect(['Diajukan', 'Disetujui', 'Diproses', 'Ditolak', 'Selesai'])
+                ->map(fn (string $status) => [
+                    'status' => $status,
+                    'count' => $requestCounts->get($status, 0),
+                ])
+                ->values();
+
+            $recentRequests = ItemRequest::query()
+                ->where('user_id', Auth::id())
+                ->with('barang:id,nama_barang')
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn (ItemRequest $request) => [
+                    'id' => $request->id,
+                    'item' => $request->barang?->nama_barang ?? 'Barang tidak tersedia',
+                    'type' => $request->tipe_pengajuan === 'peminjaman' ? 'Peminjaman' : 'Permintaan',
+                    'status' => $request->status,
+                    'submittedAt' => $request->created_at?->translatedFormat('d M Y'),
+                ])
+                ->values();
+
+            $dashboardData = [
+                'categories' => $kategoris,
+                'overview' => [
+                    ['label' => 'Barang tersedia', 'value' => Barang::where('status', 'aktif')->count(), 'icon' => 'bi-box-seam', 'theme' => 'emerald'],
+                    ['label' => 'Kategori', 'value' => $kategoris->count(), 'icon' => 'bi-grid-3x3-gap', 'theme' => 'violet'],
+                    ['label' => 'Stok menipis', 'value' => $lowStockCount, 'icon' => 'bi-exclamation-triangle', 'theme' => 'orange'],
+                    ['label' => 'Pengajuan aktif', 'value' => $requestCounts->only(['Diajukan', 'Disetujui', 'Diproses'])->sum(), 'icon' => 'bi-clipboard-check', 'theme' => 'cyan'],
+                ],
+                'requestSummary' => $requestSummary,
+                'recentRequests' => $recentRequests,
+                'quickLinks' => [
+                    'newRequest' => route('pengajuan.barang.pilihTipe'),
+                    'myRequests' => route('pengajuan.barang.index'),
+                ],
+            ];
+
+            return view('dashboard-viewer', compact('dashboardData'));
+        }
+
         // --- Data Statistik untuk Kartu ---
         $totalBarang = Barang::count();
         $totalKategori = Kategori::count();
