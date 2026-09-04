@@ -43,15 +43,35 @@ public function __construct()
         });
     }
 
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->hasPermissionTo('user-list')) {
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk melihat daftar pengguna.');
         }
 
-        // Ambil semua user, mungkin dengan rolenya juga (eager load)
-        $users = User::with('roles')->orderBy('name', 'asc')->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $filters = $request->validate([
+            'sort' => ['nullable', Rule::in(['name_asc', 'name_desc'])],
+            'verification' => ['nullable', Rule::in(['all', 'verified', 'unverified'])],
+            'role' => ['nullable', 'string', 'exists:roles,name'],
+        ]);
+
+        $query = User::with('roles');
+
+        if (($filters['verification'] ?? 'all') === 'verified') {
+            $query->whereNotNull('email_verified_at');
+        } elseif (($filters['verification'] ?? 'all') === 'unverified') {
+            $query->whereNull('email_verified_at');
+        }
+
+        if (!empty($filters['role'])) {
+            $query->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', $filters['role']));
+        }
+
+        $sortDirection = ($filters['sort'] ?? 'name_asc') === 'name_desc' ? 'desc' : 'asc';
+        $users = $query->orderBy('name', $sortDirection)->paginate(10)->withQueryString();
+        $roles = Role::orderBy('name', 'asc')->get();
+
+        return view('admin.users.index', compact('users', 'roles', 'filters'));
     }
 
     /**

@@ -13,6 +13,36 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3 align-items-end mb-4">
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Urutkan Nama</label>
+                    <select id="sort" name="sort" class="form-select">
+                        <option value="name_asc" @selected(($filters['sort'] ?? 'name_asc') === 'name_asc')>A - Z</option>
+                        <option value="name_desc" @selected(($filters['sort'] ?? '') === 'name_desc')>Z - A</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="verification" class="form-label">Verifikasi Email</label>
+                    <select id="verification" name="verification" class="form-select">
+                        <option value="all" @selected(($filters['verification'] ?? 'all') === 'all')>Semua status</option>
+                        <option value="verified" @selected(($filters['verification'] ?? '') === 'verified')>Terverifikasi</option>
+                        <option value="unverified" @selected(($filters['verification'] ?? '') === 'unverified')>Belum terverifikasi</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select id="role" name="role" class="form-select">
+                        <option value="">Semua role</option>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->name }}" @selected(($filters['role'] ?? '') === $role->name)>{{ $role->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel-fill"></i> Terapkan</button>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
             @if($users->isEmpty())
                 <div class="alert alert-info text-center">
                     Belum ada data pengguna.
