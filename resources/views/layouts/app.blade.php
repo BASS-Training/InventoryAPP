@@ -95,7 +95,6 @@
                     
                     {{-- Menu Pengajuan Barang untuk User Biasa (jika tidak di bawah Stok) --}}
                     @canany(['pengajuan-barang-create', 'pengajuan-barang-list-own',])
-                        @unless (Auth::user()->hasPermissionTo('pengajuan-barang-list-all')) {{-- Hindari duplikasi jika sudah ada di 'Kelola Semua Pengajuan' --}}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle {{ request()->is('pengajuan-barang*') ? 'active' : '' }}" href="#" id="navbarDropdownUserPengajuan" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Pengajuan Saya
@@ -109,7 +108,6 @@
                                     @endcan
                                 </ul>
                             </li>
-                        @endunless
                     @endcanany
 
                     {{-- Dropdown Laporan --}}

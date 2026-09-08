@@ -21,6 +21,10 @@ class DashboardController extends Controller
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk melihat dashboard.');
         }
 
+        if (Auth::user()->hasAnyRole(['Admin', 'StafGudang'])) {
+            return app(OperationsDashboardController::class)->index();
+        }
+
         // Dashboard Viewer sengaja dibatasi sebagai katalog barang. Viewer tidak
         // memerlukan statistik operasional maupun data pengajuan pengguna lain.
         if (Auth::user()->hasRole('Viewer')) {

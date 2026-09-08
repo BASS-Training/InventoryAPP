@@ -4,6 +4,9 @@
 
 @section('content')
 <div class="container">
+    @if ((int) $itemRequest->user_id === (int) Auth::id())
+        <div class="alert alert-info">Ini pengajuan Anda. Approval, serah-terima, dan penerimaan pengembalian ditangani petugas lain.</div>
+    @endif
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Detail Pengajuan Barang #{{ $itemRequest->id }}</h1>
         <a href="{{ route('admin.pengajuan.barang.index') }}" class="btn btn-secondary">Kembali ke Daftar Pengajuan</a>
@@ -53,7 +56,7 @@
         </div>
     </div>
 
-    @if ($itemRequest->status == 'Diajukan' && Auth::user()->hasPermissionTo('pengajuan-barang-approve'))
+    @if ((int) $itemRequest->user_id !== (int) Auth::id() && $itemRequest->status == 'Diajukan' && Auth::user()->hasPermissionTo('pengajuan-barang-approve'))
     <div class="card shadow-sm mb-4">
         <div class="card-header">
             <h5 class="mb-0">Aksi Persetujuan</h5>
@@ -104,7 +107,7 @@
     </div>
     @endif
 
-    @if ($itemRequest->status == 'Diproses' && $itemRequest->tipe_pengajuan == 'peminjaman' && Auth::user()->hasPermissionTo('pengajuan-barang-return'))
+    @if ((int) $itemRequest->user_id !== (int) Auth::id() && $itemRequest->status == 'Diproses' && $itemRequest->tipe_pengajuan == 'peminjaman' && Auth::user()->hasPermissionTo('pengajuan-barang-return'))
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Aksi Pengembalian Barang</h5>
@@ -153,7 +156,7 @@
         </div>
     @endif
 
-    @if ($itemRequest->status == 'Disetujui' && Auth::user()->hasPermissionTo('pengajuan-barang-process'))
+    @if ((int) $itemRequest->user_id !== (int) Auth::id() && $itemRequest->status == 'Disetujui' && Auth::user()->hasPermissionTo('pengajuan-barang-process'))
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Proses Pengeluaran Barang</h5>

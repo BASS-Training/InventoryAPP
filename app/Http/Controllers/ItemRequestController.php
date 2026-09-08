@@ -174,6 +174,7 @@ class ItemRequestController extends Controller
      */
     public function approve(Request $request, ItemRequest $itemRequest)
     {
+        $this->requireIndependentOfficer($itemRequest);
         if (!Auth::user()->hasPermissionTo('pengajuan-barang-approve')) {
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk menyetujui pengajuan.');
         }
@@ -233,6 +234,7 @@ class ItemRequestController extends Controller
      */
     public function reject(Request $request, ItemRequest $itemRequest)
     {
+        $this->requireIndependentOfficer($itemRequest);
         if (!Auth::user()->hasPermissionTo('pengajuan-barang-approve')) { // Permission yang sama dengan approve
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk menolak pengajuan.');
         }
@@ -265,6 +267,7 @@ class ItemRequestController extends Controller
 
     public function process(Request $requestInput, ItemRequest $itemRequest) // Ganti nama $request menjadi $requestInput agar tidak konflik
     {
+        $this->requireIndependentOfficer($itemRequest);
         if (!Auth::user()->hasPermissionTo('pengajuan-barang-process')) {
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk memproses pengajuan barang.');
         }
@@ -369,6 +372,7 @@ class ItemRequestController extends Controller
 
     public function storeReturn(Request $request, ItemRequest $itemRequest)
     {
+        $this->requireIndependentOfficer($itemRequest);
         if (!Auth::user()->hasPermissionTo('pengajuan-barang-return')) {
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk mencatat pengembalian barang.');
         }
@@ -421,6 +425,12 @@ class ItemRequestController extends Controller
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk membuat pengajuan.');
         }
         return view('pengajuan_barang.pilih_tipe');
+    }
+
+    private function requireIndependentOfficer(ItemRequest $itemRequest): void
+    {
+        abort_if((int) $itemRequest->user_id === (int) Auth::id(), 403,
+            'Pengajuan sendiri harus ditangani oleh Staf Gudang lain atau Admin.');
     }
 
     // Method store akan kita isi nanti
