@@ -5,6 +5,8 @@ export default function ViewerInventoryDashboard({ data }) {
     const { categories, overview, requestSummary, recentRequests, quickLinks } = data;
     const [keyword, setKeyword] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [categoryPages, setCategoryPages] = useState({});
+    const pageSize = 10;
     const categoryThemes = ['emerald', 'violet', 'orange', 'rose', 'cyan', 'slate'];
 
     const filteredCategories = useMemo(() => {
@@ -36,7 +38,7 @@ export default function ViewerInventoryDashboard({ data }) {
                     <h1 className="h3 mb-1">Katalog Barang</h1>
                     <p className="text-muted mb-0">Cari dan lihat ketersediaan barang berdasarkan kategori.</p>
                 </div>
-                <div className="viewer-inventory__count"><strong>{itemCount}</strong><span>barang ditampilkan</span></div>
+                <div className="viewer-inventory__count"><strong>{itemCount}</strong><span>barang sesuai filter</span></div>
             </header>
 
             <section className="row g-3 mb-4" aria-label="Ringkasan inventaris">
@@ -71,7 +73,7 @@ export default function ViewerInventoryDashboard({ data }) {
                 <div className="card-body row g-3 align-items-end">
                     <div className="col-12 col-md-7">
                         <label className="form-label" htmlFor="inventory-search">Cari barang</label>
-                        <div className="input-group"><span className="input-group-text"><i className="bi bi-search" aria-hidden="true" /></span><input id="inventory-search" className="form-control" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Nama, kode, jenis, atau lokasi..." /></div>
+                        <div className="input-group"><span className="input-group-text"><i className="bi bi-search" aria-hidden="true" /></span><input id="inventory-search" className="form-control" value={keyword} onChange={(event) => { setKeyword(event.target.value); setCategoryPages({}); }} placeholder="Nama, kode, jenis, atau lokasi..." /></div>
                     </div>
                     <div className="col-12 col-md-5">
                         <label className="form-label" htmlFor="inventory-category">Kategori</label>
@@ -84,22 +86,40 @@ export default function ViewerInventoryDashboard({ data }) {
             </div>
 
             <div className="row g-4">
-                {filteredCategories.map((category) => (
+                {filteredCategories.map((category) => {
+                    const pageCount = Math.max(1, Math.ceil(category.items.length / pageSize));
+                    const page = Math.min(categoryPages[category.id] || 1, pageCount);
+                    const start = (page - 1) * pageSize;
+                    const visibleItems = category.items.slice(start, start + pageSize);
+                    const setPage = (next) => setCategoryPages((previous) => ({ ...previous, [category.id]: next }));
+                    return (
                     <div className="col-12 col-xl-6" key={category.id}>
                         <section className="card viewer-inventory__category h-100">
                             <div className={`card-header viewer-inventory__category-header viewer-inventory__category-header--${categoryThemes[(category.id - 1) % categoryThemes.length]} d-flex align-items-center justify-content-between`}><h2 className="h5 mb-0">{category.name}</h2><span className="badge rounded-pill text-bg-light">{category.items.length} barang</span></div>
                             <div className="table-responsive">
                                 <table className="table table-hover mb-0">
                                     <thead><tr><th>Barang</th><th>Kode</th><th>Jenis</th><th>Lokasi</th><th className="text-center">Stok</th></tr></thead>
-                                    <tbody>{category.items.map((item) => {
+                                    <tbody>{visibleItems.map((item) => {
                                         const isLowStock = item.minimumStock > 0 && item.stock <= item.minimumStock;
                                         return <tr key={item.id} className={isLowStock ? 'table-warning' : ''}><td className="fw-semibold">{item.name}{isLowStock && <span className="viewer-inventory__low-label"><i className="bi bi-exclamation-circle-fill" aria-hidden="true" /> Stok menipis</span>}</td><td>{item.code || '-'}</td><td>{item.type}</td><td>{item.location || '-'}</td><td className="text-center"><span className={`badge ${isLowStock ? 'text-bg-warning' : 'text-bg-secondary'}`}>{item.stock} {item.unit || ''}</span>{isLowStock && <small className="d-block text-muted mt-1">Min. {item.minimumStock}</small>}</td></tr>;
                                     })}</tbody>
                                 </table>
                             </div>
+                            <div className="mt-auto border-top p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <small className="text-muted" aria-live="polite">
+                                    {category.items.length ? start + 1 : 0}–{Math.min(start + pageSize, category.items.length)} dari {category.items.length} barang
+                                </small>
+                                {pageCount > 1 && (
+                                    <nav aria-label={'Halaman kategori ' + category.name} className="d-flex align-items-center gap-2">
+                                        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={page === 1} onClick={() => setPage(page - 1)} aria-label={'Halaman sebelumnya ' + category.name}>‹</button>
+                                        <span className="small">Halaman {page} / {pageCount}</span>
+                                        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={page === pageCount} onClick={() => setPage(page + 1)} aria-label={'Halaman berikutnya ' + category.name}>›</button>
+                                    </nav>
+                                )}
+                            </div>
                         </section>
                     </div>
-                ))}
+                ); })}
             </div>
             {filteredCategories.length === 0 && <div className="alert alert-light border text-center py-4">Tidak ada barang yang sesuai dengan pencarian.</div>}
         </div>
